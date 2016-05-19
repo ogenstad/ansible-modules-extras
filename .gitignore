@@ -23,6 +23,8 @@ docs/man/man3/*
 # Sublime stuff
 *.sublime-project
 *.sublime-workspace
+# rope stuff...
+.ropeproject/
 # docsite stuff...
 docsite/rst/modules_by_category.rst
 docsite/rst/list_of_*.rst
