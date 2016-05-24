@@ -18,16 +18,13 @@
 
 DOCUMENTATION = """
 ---
-module: ios_config
+module: asa_acl
 version_added: "2.2"
 author: "Patrick Ogenstad (@ogenstad)"
 short_description: Manage access-lists on a Cisco ASA
 description:
-  - Cisco IOS configurations use a simple block indent file sytanx
-    for segementing configuration into sections.  This module provides
-    an implementation for working with IOS configuration sections in
-    a deterministic way.
-extends_documentation_fragment: ios
+  - This module allows you to work with access-lists on a Cisco ASA device.
+extends_documentation_fragment: asa
 options:
   lines:
     description:
@@ -37,14 +34,6 @@ options:
         command syntanx as some commands are automatically modified by the
         device config parser.
     required: true
-  parents:
-    description:
-      - The ordered set of parents that uniquely identify the section
-        the commands should be checked against.  If the parents argument
-        is omitted, the commands are checked against the set of top
-        level or global commands.
-    required: false
-    default: null
   before:
     description:
       - The ordered set of commands to push on to the command stack if
@@ -107,37 +96,23 @@ options:
 """
 
 EXAMPLES = """
-- ios_config:
-    lines: ['hostname {{ inventory_hostname }}']
-    force: yes
 
-- ios_config:
+- asa_acl:
     lines:
-      - 10 permit ip host 1.1.1.1 any log
-      - 20 permit ip host 2.2.2.2 any log
-      - 30 permit ip host 3.3.3.3 any log
-      - 40 permit ip host 4.4.4.4 any log
-      - 50 permit ip host 5.5.5.5 any log
-    parents: ['ip access-list extended test']
-    before: ['no ip access-list extended test']
-    match: exact
-
-- ios_config:
-    lines:
-      - 10 permit ip host 1.1.1.1 any log
-      - 20 permit ip host 2.2.2.2 any log
-      - 30 permit ip host 3.3.3.3 any log
-      - 40 permit ip host 4.4.4.4 any log
-    parents: ['ip access-list extended test']
-    before: ['no ip access-list extended test']
+      - access-list ACL-ANSIBLE extended permit tcp any any eq 82
+      - access-list ACL-ANSIBLE extended permit tcp any any eq www
+      - access-list ACL-ANSIBLE extended permit tcp any any eq 97
+      - access-list ACL-ANSIBLE extended permit tcp any any eq 98
+      - access-list ACL-ANSIBLE extended permit tcp any any eq 99
+    before: clear configure access-list ACL-ANSIBLE
+    match: strict
     replace: block
 
-- ios_config:
-    commands: "{{lookup('file', 'datcenter1.txt')}}"
-    parents: ['ip access-list test']
-    before: ['no ip access-list test']
-    replace: block
-
+- asa_acl:
+    lines:
+      - access-list ACL-OUTSIDE extended permit tcp any any eq www
+      - access-list ACL-OUTSIDE extended permit tcp any any eq https
+     context: customer_a
 """
 
 RETURN = """
@@ -181,7 +156,6 @@ def main():
 
     argument_spec = dict(
         lines=dict(aliases=['commands'], required=True, type='list'),
-        #parents=dict(type='list'),
         before=dict(type='list'),
         after=dict(type='list'),
         match=dict(default='line', choices=['line', 'strict', 'exact']),
@@ -194,7 +168,6 @@ def main():
                         supports_check_mode=True)
 
     lines = module.params['lines']
-    #parents = module.params['parents'] or list()
 
     before = module.params['before']
     after = module.params['after']
@@ -202,7 +175,6 @@ def main():
     match = module.params['match']
     replace = module.params['replace']
 
-    # acl_name = check_input_acl(lines, module)
     module.filter = check_input_acl(lines, module)
     if not module.params['force']:
         contents = get_config(module)

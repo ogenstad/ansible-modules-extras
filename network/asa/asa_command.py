@@ -19,16 +19,16 @@
 
 DOCUMENTATION = """
 ---
-module: ios_command
-version_added: "2.1"
+module: asa_command
+version_added: "2.2"
 author: "Peter sprygada (@privateip)"
-short_description: Run arbitrary commands on ios devices.
+short_description: Run arbitrary commands on Cisco ASA devices.
 description:
-  - Sends arbitrary commands to an ios node and returns the results
-    read from the device. The M(ios_command) module includes an
+  - Sends arbitrary commands to an ASA node and returns the results
+    read from the device. The M(asa_command) module includes an
     argument that will cause the module to wait for a specific condition
     before returning or timing out if the condition is not met.
-extends_documentation_fragment: ios
+extends_documentation_fragment: asa
 options:
   commands:
     description:
@@ -68,22 +68,21 @@ options:
 
 EXAMPLES = """
 
-- ios_command:
+- asa_command:
     commands:
       - show version
   register: output
 
-- ios_command:
+- asa_command:
+    commands:
+      - show asp drop
+      - show memory
+    register: output
+
+- asa_command:
     commands:
       - show version
-    waitfor:
-      - "result[0] contains IOS"
-
-- ios_command:
-    commands:
-      - show version
-      - show interfaces
-
+    context: system
 """
 
 RETURN = """

@@ -18,16 +18,16 @@
 
 DOCUMENTATION = """
 ---
-module: ios_config
-version_added: "2.1"
+module: asa_config
+version_added: "2.2"
 author: "Peter Sprygada (@privateip)"
-short_description: Manage Cisco IOS configuration sections
+short_description: Manage Cisco ASA configuration sections
 description:
-  - Cisco IOS configurations use a simple block indent file sytanx
+  - Cisco ASA configurations use a simple block indent file sytanx
     for segementing configuration into sections.  This module provides
-    an implementation for working with IOS configuration sections in
+    an implementation for working with ASA configuration sections in
     a deterministic way.
-extends_documentation_fragment: ios
+extends_documentation_fragment: asa
 options:
   lines:
     description:
@@ -107,36 +107,34 @@ options:
 """
 
 EXAMPLES = """
-- ios_config:
-    lines: ['hostname {{ inventory_hostname }}']
-    force: yes
 
-- ios_config:
+- asa_config:
     lines:
-      - 10 permit ip host 1.1.1.1 any log
-      - 20 permit ip host 2.2.2.2 any log
-      - 30 permit ip host 3.3.3.3 any log
-      - 40 permit ip host 4.4.4.4 any log
-      - 50 permit ip host 5.5.5.5 any log
-    parents: ['ip access-list extended test']
-    before: ['no ip access-list extended test']
-    match: exact
+      - network-object host 10.80.30.18
+      - network-object host 10.80.30.19
+      - network-object host 10.80.30.20
+    parents: ['object-group network OG-MONITORED-SERVERS']
 
-- ios_config:
+- asa_config:
+    host: "{{ inventory_hostname }}"
     lines:
-      - 10 permit ip host 1.1.1.1 any log
-      - 20 permit ip host 2.2.2.2 any log
-      - 30 permit ip host 3.3.3.3 any log
-      - 40 permit ip host 4.4.4.4 any log
-    parents: ['ip access-list extended test']
-    before: ['no ip access-list extended test']
-    replace: block
+      - message-length maximum client auto
+      - message-length maximum 512
+    match: line
+    parents: ['policy-map type inspect dns PM-DNS', 'parameters']
+    authorize: yes
+    auth_pass: cisco
+    username: admin
+    password: cisco
+    context: ansible
 
-- ios_config:
-    commands: "{{lookup('file', 'datcenter1.txt')}}"
-    parents: ['ip access-list test']
-    before: ['no ip access-list test']
-    replace: block
+- asa_config:
+    provider: "{{ cli }}"
+    host: "{{ inventory_hostname }}"
+    show_command: 'more system:running-config'
+    lines:
+      - ikev1 pre-shared-key S3cretVPNK3y
+    parents: tunnel-group 1.1.1.1 ipsec-attributes
 
 """
 
